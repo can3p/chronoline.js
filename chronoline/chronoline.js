@@ -19,7 +19,8 @@ function addElemClass(paperType, node, newClass){
 }
 
 function stripTime(date){
-    return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    return new Date(date);
+    //return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 }
 
 function formatDate(date, formatString){
@@ -482,9 +483,18 @@ function Chronoline(domElement, events, options) {
 
 
     t.drawLabelsHelper = function(startMs, endMs){
-        for(var curMs = startMs; curMs < endMs; curMs += DAY_IN_MILLISECONDS){
+        var date = new Date(startMs);
+        if (date.getHours() > 0) {
+          date.setHours(0);
+          date.setDate(date.getDate() + 1);
+          startMs = date.getTime();
+        }
+
+        //add more resolution to the chronoline
+        for(var curMs = startMs; curMs < endMs; curMs += DAY_IN_MILLISECONDS / 12){
             var curDate = new Date(curMs);
             var day = curDate.getUTCDate();
+            var hour = curDate.getHours();
             var x = t.msToPx(curMs);
 
             // the little hashes
@@ -495,12 +505,17 @@ function Chronoline(domElement, events, options) {
 
             // the labels directly below the hashes
             if(t.labelInterval == null || t.labelInterval(curDate)){
-                var displayDate = String(day);
-                if(displayDate.length == 1)
-                    displayDate = '0' + displayDate;
+              var displayHour = String(hour);
+              if(displayHour.length == 1)
+                  displayHour = '0' + displayHour;
 
-                var label = t.paper.text(x, t.labelY, displayDate);
-                label.attr(t.fontAttrs);
+              var label = t.paper.text(x, t.labelY, displayHour);
+              //var displayDate = String(day);
+              //if(displayDate.length == 1)
+                  //displayDate = '0' + displayDate;
+
+              //var label = t.paper.text(x, t.labelY, displayDate);
+              //label.attr(t.fontAttrs);
             }
 
             // special markers for today
@@ -534,6 +549,21 @@ function Chronoline(domElement, events, options) {
                     t.floatingSet.push(subLabel);
                 }
             }
+
+            if (hour === 0 && t.subLabel === 'day') {
+              var subLabel = t.paper.text(x + 40, t.subLabelY, formatDate(curDate, '%d %b %Y').toUpperCase());
+              subLabel.attr(t.fontAttrs);
+              subLabel.attr(t.subLabelAttrs);
+              if(t.floatingSubLabels){
+                  // bounds determine how far things can float
+                  subLabel.data('left-bound', x);
+                  var endOfMonth = new Date(Date.UTC(curDate.getUTCFullYear(), curDate.getUTCMonth() + 1, 0));
+                  subLabel.data('right-bound',
+                                Math.min((endOfMonth.getTime() - t.startTime) * t.pxRatio - 5,
+                                         t.totalWidth));
+                  t.floatingSet.push(subLabel);
+              }
+            }
         }
     }
 
@@ -547,7 +577,6 @@ function Chronoline(domElement, events, options) {
         var newEndPx = Math.min(t.totalWidth, leftPxPos + 2 * t.visibleWidth);
 
         var newStartDate = new Date(t.pxToMs(newStartPx));
-        newStartDate = new Date(Date.UTC(newStartDate.getUTCFullYear(), newStartDate.getUTCMonth(), 1));
         var newStartMs = newStartDate.getTime();
         var newEndDate = stripTime(new Date(t.pxToMs(Math.min(t.totalWidth, leftPxPos + 2 * t.visibleWidth))))
         var newEndMs = newEndDate.getTime();
