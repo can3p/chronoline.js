@@ -1,20 +1,14 @@
 // chronoline.js
 // by Kevin Leung for Zanbato, https://zanbato.com
 // MIT license at https://github.com/StoicLoofah/chronoline.js/blob/master/LICENSE.md
+//
+(function(window) {
 
-    if (!Date.now) {
-        Date.now = function now() {
-            return +(new Date);
-        };
-    }
+var DAY_IN_MILLISECONDS = 86400000;
 
-DAY_IN_MILLISECONDS = 86400000;
+window.Chronoline = Chronoline;
 
 var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || function( callback, element){
-    return window.setTimeout(function(){callback(+new Date());}, 1000 / 60);
-};
 
 function addElemClass(paperType, node, newClass){
     if(paperType == 'SVG'){
@@ -148,7 +142,7 @@ function Chronoline(domElement, events, options) {
         // predefined fns include: prevMonth, nextMonth, prevQuarter, nextQuarter, backWeek, forwardWeek
         scrollLeft: backWeek,
         scrollRight: forwardWeek,
-        animated: false,  // whether scrolling is animated or just jumps, requires jQuery
+        //animated: false,  // whether scrolling is animated or just jumps, requires jQuery
 
         tooltips: false,  // activates qtip tooltips. Otherwise, you just get title tooltips
         markToday: 'line',  // 'line', 'labelBox', false
@@ -159,7 +153,7 @@ function Chronoline(domElement, events, options) {
         sectionLabelAttrs: {},
         sectionLabelsOnHover: true,
 
-        draggable: false, // requires jQuery, allows mouse dragging
+        //draggable: false, // requires jQuery, allows mouse dragging
 
         continuousScroll: true,  // requires that scrollable be true, click-and-hold arrows
         continuousScrollSpeed: 1,  // I believe this is px/s of scroll. There is no easing in it
@@ -406,34 +400,34 @@ function Chronoline(domElement, events, options) {
             addElemClass(t.paperType, elem.node, 'chronoline-event');
 
             elem.attr('title', myEvent.title);
-            if(t.tooltips && !jQuery.browser.msie){
-                var description = myEvent.description;
-                var title = myEvent.title;
-                if(typeof description == "undefined" || description == ''){
-                    description = title;
-                    title = '';
-                }
-                jQuery(elem.node).parent().qtip({
-                    content: {
-                        title: title,
-                        text: description
-                    },
-                    position: {
-                        my: 'top left',
-                        target: 'mouse',
-                        viewport: jQuery(window), // Keep it on-screen at all times if possible
-                        adjust: {
-                            x: 10,  y: 10
-                        }
-                    },
-                    hide: {
-                        fixed: true // Helps to prevent the tooltip from hiding ocassionally when tracking!
-                    },
-                    style: {
-                        classes: 'qtip-shadow qtip-dark qtip-rounded'
-                    }
-                });
-            }
+            //if(t.tooltips && !jQuery.browser.msie){
+                //var description = myEvent.description;
+                //var title = myEvent.title;
+                //if(typeof description == "undefined" || description == ''){
+                    //description = title;
+                    //title = '';
+                //}
+                //jQuery(elem.node).parent().qtip({
+                    //content: {
+                        //title: title,
+                        //text: description
+                    //},
+                    //position: {
+                        //my: 'top left',
+                        //target: 'mouse',
+                        //viewport: jQuery(window), // Keep it on-screen at all times if possible
+                        //adjust: {
+                            //x: 10,  y: 10
+                        //}
+                    //},
+                    //hide: {
+                        //fixed: true // Helps to prevent the tooltip from hiding ocassionally when tracking!
+                    //},
+                    //style: {
+                        //classes: 'qtip-shadow qtip-dark qtip-rounded'
+                    //}
+                //});
+            //}
             if(t.sections != null && t.sectionLabelsOnHover){
                 // some magic here to tie the event back to the section label element
                 var originalIndex = myEvent.section;
@@ -635,7 +629,8 @@ function Chronoline(domElement, events, options) {
             }
         });
 
-        if(isAnimated){
+        //disable animation to drop dependency form jquery
+        if(false && isAnimated){
             t.isMoving = true;
 
             var start = null;
@@ -801,35 +796,6 @@ function Chronoline(domElement, events, options) {
 
     }
 
-    // ENABLING DRAGGING
-    // i'm not using raphael.js built-in dragging since this is for the entire canvas
-    // also, i didn't see that function before I wrote this
-    // using jQuery to get mouseleave to work cross-browser
-    if(t.draggable){
-        t.stopDragging = function(e){
-            jQuery(t.wrapper).removeClass('dragging')
-                .unbind('mousemove', t.mouseMoved)
-                .unbind('mouseleave', t.stopDragging)
-                .unbind('mouseup', t.stopDragging);
-            t.drawLabels(-getLeft(t.paperElem));
-        }
-
-        t.mouseMoved = function(e){
-            t.goToPx(t.dragPaperStart - (t.dragMouseStart - e.pageX), false, false);
-        }
-
-        t.wrapper.className += ' chronoline-draggable';
-        jQuery(t.paperElem).mousedown(function(e){
-            e.preventDefault();
-            t.dragMouseStart = e.pageX;
-            t.dragPaperStart = getLeft(t.paperElem);
-            jQuery(t.wrapper).addClass('dragging')
-                .bind('mousemove', t.mouseMoved)
-                .bind('mouseleave', t.stopDragging)
-                .bind('mouseup', t.stopDragging);
-        });
-    }
-
     t.goToToday = function(){
         // scrolls to put today in the middle
         t.goToDate(t.today, 0);
@@ -850,3 +816,5 @@ function Chronoline(domElement, events, options) {
     t.goToPx(getLeft(t.paperElem));
     t.myCanvas.style.height = t.totalHeight + 'px';
 }
+
+}(window));
